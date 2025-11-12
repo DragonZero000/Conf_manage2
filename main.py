@@ -39,6 +39,11 @@ def parse_arguments():
         default="graph.png",
         help='The name of the file containing the graph image (default: graph.png)'
     )
+    parser.add_argument(
+        '--print-order',
+        action='store_true',
+        help='Print the load order of dependencies (dependencies first)'
+    )
     return parser
 
 def fetch_apkindex(repo, mode):
@@ -179,6 +184,19 @@ def main():
         plt.savefig(args.output)
         plt.close()
         print(f"Graph saved to {args.output}")
+        if args.print_order:
+            print("\nComputing load order...")
+            if cycles:
+                print("Cannot compute load order due to cyclic dependencies.")
+            else:
+                try:
+                    topo_order = list(nx.topological_sort(G))
+                    load_order = topo_order[::-1]
+                    print("\nLoad order (dependencies first):")
+                    for pkg in load_order:
+                        print(pkg)
+                except nx.NetworkXUnfeasible as e:
+                    print(f"Error: {str(e)}")
     except SystemExit:
         print("Error: Invalid command line arguments.")
         print("Please check the help list below:")
